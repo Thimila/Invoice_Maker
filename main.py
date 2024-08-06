@@ -1,9 +1,14 @@
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
+from reportlab.lib.units import inch
 
-def generate_invoice(invoice_data, filename):
+def generate_invoice(invoice_data, filename, logo_path):
     c = canvas.Canvas(filename, pagesize=letter)
     width, height = letter
+
+    # Draw the logo
+    logo_width, logo_height = inch, inch
+    c.drawImage(logo_path, width - logo_width - 30, height - logo_height - 30, width=logo_width, height=logo_height, mask='auto')
 
     # Invoice Title
     c.setFont("Helvetica-Bold", 20)
@@ -17,23 +22,27 @@ def generate_invoice(invoice_data, filename):
     c.drawString(30, height - 160, f"Customer Address: {invoice_data['customer_address']}")
 
     # Table Headers
+    c.setFont("Helvetica-Bold", 12)
     c.drawString(30, height - 200, "Description")
-    c.drawString(300, height - 200, "Quantity")
-    c.drawString(400, height - 200, "Unit Price")
-    c.drawString(500, height - 200, "Total")
+    c.drawString(250, height - 200, "Quantity")
+    c.drawString(350, height - 200, "Unit Price")
+    c.drawString(450, height - 200, "Total")
 
     y = height - 220
+    c.setFont("Helvetica", 12)
     for item in invoice_data['items']:
         c.drawString(30, y, item['description'])
-        c.drawString(300, y, str(item['quantity']))
-        c.drawString(400, y, f"${item['unit_price']:.2f}")
-        c.drawString(500, y, f"${item['total']:.2f}")
+        c.drawString(250, y, str(item['quantity']))
+        c.drawString(350, y, f"{item['unit_price']:.2f}")
+        c.drawString(450, y, f"{item['total']:.2f}")
         y -= 20
 
     # Calculate and draw total amount
     total_amount = sum(item['total'] for item in invoice_data['items'])
-    c.drawString(400, y - 20, "Total Amount:")
-    c.drawString(500, y - 20, f"${total_amount:.2f}")
+    y -= 20
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(350, y, "Total Amount:")
+    c.drawString(450, y, f"{total_amount:.2f}")
 
     c.save()
 
@@ -60,7 +69,8 @@ def get_invoice_data():
 def main():
     invoice_data = get_invoice_data()
     filename = input("Enter the filename for the invoice PDF (e.g., invoice.pdf): ")
-    generate_invoice(invoice_data, filename)
+    logo_path = input("Enter the path to your logo image (e.g., logo.png): ")
+    generate_invoice(invoice_data, filename, logo_path)
     print(f"Invoice {filename} has been generated.")
 
 if __name__ == "__main__":
